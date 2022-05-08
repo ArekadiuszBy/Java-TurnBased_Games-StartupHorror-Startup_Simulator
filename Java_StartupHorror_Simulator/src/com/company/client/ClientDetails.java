@@ -17,8 +17,8 @@ public class ClientDetails implements IClientDetails {
 
     public Object[] getClientDetails() {
         var randomGenerator = new RandomGenerator();
-        var randomNumber1 = randomGenerator.getRandomValue(0, 10);
-        var randomNumber2 = randomGenerator.getRandomValue(0, 10);
+        var randomNumber1 = randomGenerator.getRandomValue(0, 9);
+        var randomNumber2 = randomGenerator.getRandomValue(0, 4);
 
         this.name = this.names[randomNumber1];
         this.address = this.addresses[randomNumber2];
