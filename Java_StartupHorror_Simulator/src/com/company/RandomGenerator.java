@@ -1,6 +1,10 @@
 package com.company;
 
+import com.company.workers.Subcontractor;
+
 public class RandomGenerator {
+    private final String[] names = { "Andrzej", "Janusz", "Halina",  "Miłonica",  "Arek",  "Monika",  "Olek",  "Roland",  "Bartek",  "Kamil" };
+    private final String[] specializations = { "Programmer", "Tester", "Seller" };
 
     public int getRandomValue(int start, int end) {
 	    return (int)(Math.random() * (end - start + 1) + start);
@@ -17,6 +21,25 @@ public class RandomGenerator {
         sb.append(random1*12);
 
         return sb.toString();
+    }
+
+    public Subcontractor getRandomSubcontractor(int random) {
+        var name = this.names[random % 10];
+        var specialization = this.names[random % 3];
+        var dailyCosts = 0;
+        if (random < 10)
+            dailyCosts = random*5 + 100;
+        else if (random < 100)
+            dailyCosts = random + 100;
+        else
+            dailyCosts = random % 20 * 4 + 100;
+
+        if (specialization.equals("Programmer"))
+            dailyCosts += 50;
+        else if (specialization.equals("Tester"))
+            dailyCosts -= 50;
+
+        return new Subcontractor(name, false, dailyCosts, specialization);
     }
 
 }

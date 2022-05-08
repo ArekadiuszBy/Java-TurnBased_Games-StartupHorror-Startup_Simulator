@@ -16,7 +16,7 @@ public class ClientDetails implements IClientDetails {
     IClientType clientType = new IClientType() {};
 
     public Object[] getClientDetails() {
-        RandomGenerator randomGenerator = new RandomGenerator();
+        var randomGenerator = new RandomGenerator();
         var randomNumber1 = randomGenerator.getRandomValue(0, 10);
         var randomNumber2 = randomGenerator.getRandomValue(0, 10);
 
@@ -38,8 +38,8 @@ public class ClientDetails implements IClientDetails {
     }
 
     public Date getDate(int randomNumber1, int randomNumber2) {
-        Date date =  new Date();
-        Calendar calendar = Calendar.getInstance();
+        var date =  new Date();
+        var calendar = Calendar.getInstance();
         calendar.setTime(date);
         int year = calendar.get(Calendar.YEAR) + randomNumber1 / 5;
         int month = calendar.get(Calendar.MONTH) + randomNumber1;

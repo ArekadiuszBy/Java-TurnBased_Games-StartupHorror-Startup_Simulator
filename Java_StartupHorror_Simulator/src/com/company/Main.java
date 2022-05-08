@@ -1,4 +1,8 @@
 package com.company;
+import com.company.client.ClientDetails;
+import com.company.workers.Subcontractor;
+
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -6,15 +10,35 @@ import java.util.GregorianCalendar;
 public class Main {
 
     public static void main(String[] args) {
-        var game = new Game();
+        // Game initialization
+        var game = new Game(new ArrayList<>(), new ClientDetails());
+
+        // Game start values
+        var randomGenerator = new RandomGenerator();
         var startDate = getDate();
-        game.startGame(startDate);
-        System.out.println(startDate);
+        var randomNumber1 = randomGenerator.getRandomValue(0, 500);
+        var wholeGame = game.startGame(startDate, randomNumber1);
+
+        var moneys = randomNumber1 * 100;
+        if (moneys < 5000)
+            moneys += 5000;
+        var workers = new ArrayList<Subcontractor>();
+
+        System.out.println("You're starting at:" + startDate);
+        System.out.println("Your moneys: " + moneys);
+        System.out.println("Your workers: " + "null");
 
         var allConditions = false;
         while (allConditions) {
+            if (moneys <= 0)
+                System.out.println("LOSER!");
 
-            game.checkCondition(1, false, false, 100, 10);
+            if (game.checkCondition(1, false, false, 100, 10))
+                System.out.println("YOU WON!");
+                System.out.println("Your moneys: " + moneys);
+                System.out.println("Your workers: " + workers);
+                System.out.println("Your moneys: " + moneys);
+                System.out.println("Your moneys: " + moneys);
         }
     }
 
