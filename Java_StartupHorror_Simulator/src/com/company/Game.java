@@ -1,9 +1,6 @@
 package com.company;
 import com.company.client.ClientDetails;
 import com.company.workers.Subcontractor;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -15,7 +12,9 @@ public class Game {
     public ClientDetails clientDetails;
     private Double moneys;
     private Double costOfWorkers;
-    private int taxesDaysMade;
+    private int taxesDaysMade = 0;
+    private int availableProjects = 0;
+    private int daysToNewAvailableProject = 0;
 
     public void playGame() {
         // Game initialization
