@@ -1,14 +1,21 @@
 package com.company;
 import com.company.client.ClientDetails;
 import com.company.workers.Subcontractor;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Scanner;
 
 public class Game {
     public ArrayList<Subcontractor> subcontractors;
+    public ArrayList<Subcontractor> hiredWorkers;
     public ClientDetails clientDetails;
     private Double moneys;
+    private Double costOfWorkers;
+    private int taxesDaysMade;
 
     public void playGame() {
         // Game initialization
@@ -20,22 +27,25 @@ public class Game {
         var randomNumber1 = randomGenerator.getRandomValue(0, 500);
         var wholeGame = game.startGame();
 
+        this.taxesDaysMade = 0;
         this.moneys = Double.valueOf(randomNumber1 * 100);
         if (this.moneys < 5000)
             this.moneys += 5000;
-        var workers = new ArrayList<Subcontractor>();
 
         System.out.println("\n\n You're starting at:" + startDate.getTime());
         System.out.println("Your moneys: " + moneys);
         System.out.println("Your workers: " + "null");
         System.out.println("\n\n");
 
+        // Global variables to count also between days
         var allConditions = false;
         var dayNumber = 0;
         var projectsQuantity = 0;
         var tempCurrentDate = startDate;
-        var workAlone = false;
+        var workOnlyAlone = false;
+        var isOwnerWorking = false;
         game.getSubcontractorsString();
+
 
         while (!allConditions) {
             System.out.println("\nToday is day no." + dayNumber + "    Date: " + startDate.getTime());
@@ -44,16 +54,43 @@ public class Game {
             if (moneys <= 0)
                 System.out.println("You lost (your money, your wife and your house).");
 
-            workAlone = (startDate.get(Calendar.DAY_OF_WEEK) == 7 || startDate.get(Calendar.DAY_OF_WEEK) == 0);
+            isOwnerWorking = this.isOwnerWorkingToday();
+            workOnlyAlone = (startDate.get(Calendar.DAY_OF_WEEK) == 7 || startDate.get(Calendar.DAY_OF_WEEK) == 0);
+            if(!isOwnerWorking) {
+                startDate = addDay(startDate);
+                dayNumber++;
+                tempCurrentDate = startDate;
+                continue;
+            }
 
-            if (workAlone) {
+            var todayOption = this.readPlayerOption();
+
+            if (todayOption == 1) {
+                System.out.println("YOU WONNNN!");
+            } else if (todayOption == 2) {
+                System.out.println("YOU WONNNN!");
+            } else if (todayOption == 3) {
+                System.out.println("YOU WONNNN!");
+            } else if (todayOption == 4) {
+                System.out.println("YOU WONNNN!");
+            } else if (todayOption == 5) {
+                System.out.println("YOU WONNNN!");
+            } else if (todayOption == 6) {
+                this.hiredWorkers = (ArrayList<Subcontractor>) this.subcontractors.stream().filter(t -> t.isHired).toList();
+                this.hiredWorkers.remove(hiredWorkers.size());
+                this.subcontractors = hiredWorkers;
+            } else if (todayOption == 7) {
+                this.taxesDaysMade++;
+            }
+
+            if (workOnlyAlone) {
 
             }
 
-            if (game.checkCondition(1, false, false, moneys)) {
+            if (game.checkCondition(1, false, false, this.moneys)) {
                 System.out.println("YOU WON!");
-                System.out.println("Your moneys: " + moneys);
-                System.out.println("Your workers: " + workers);
+                System.out.println("Your moneys: " + this.moneys);
+                System.out.println("Your workers: " + this.hiredWorkers);
                 System.out.println("Projects in your organization: " + projectsQuantity);
 
             }
@@ -61,10 +98,17 @@ public class Game {
             if (dayNumber == 5)
                 allConditions = true;
 
+            for (var subcontractor : subcontractors) {
+                if (subcontractor.isHired)
+                    this.costOfWorkers += subcontractor.dailyCosts;
+            }
+            this.moneys -= costOfWorkers;
+
             startDate = addDay(startDate);
             dayNumber++;
             tempCurrentDate = startDate;
         }
+
     }
 
     public static Calendar getStartDate() {
@@ -153,6 +197,65 @@ public class Game {
                     " / dailyCosts: " + subcontractor.dailyCosts +
                     " / isHired: " + subcontractor.isHired);
             i++;
+        }
+    }
+
+    public boolean isOwnerWorkingToday() {
+        var scanner = new Scanner(System.in);
+        var userInput = scanner.nextLine();
+        var userChoice = Integer.parseInt(userInput);
+        if (userChoice == 0) {
+            System.out.println("You're not working today");
+            return false;
+        } else {
+            System.out.println("You're working today");
+            return true;
+        }
+
+    }
+
+    public int readPlayerOption() {
+        System.out.println("Select option for the next day (1-7): ");
+        var scanner = new Scanner(System.in);
+        var userInput = scanner.nextLine();
+        var userChoice = Integer.parseInt(userInput);
+        switch(userChoice) {
+            case 1: {
+                System.out.println("You've signed new contract!");
+                return 1;
+            }
+            case 2: {
+                System.out.println("You're searching for a new client!");
+                return 2;
+            }
+            case 3: {
+                System.out.println("You're programmer today!");
+                return 3;
+            }
+            case 4: {
+                System.out.println("You're tester today!");
+                return 4;
+            }
+            case 5: {
+                System.out.println("You're handing over the project!");
+                return 5;
+            }
+            case 6: {
+                System.out.println("You've got new employee!");
+                return 6;
+            }
+            case 7: {
+                System.out.println("You fired old employee!");
+                return 6;
+            }
+            case 8: {
+                System.out.println("You're spending this day only on taxes (ZUS).");
+                return 8;
+            }
+            default: {
+                System.out.println("You're choose nothing. Choose again.");
+                return 0;
+            }
         }
     }
 
