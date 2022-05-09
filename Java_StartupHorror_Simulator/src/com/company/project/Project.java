@@ -7,17 +7,17 @@ import java.util.Calendar;
 public class Project {
 
     public Calendar currentDate;
-    public ArrayList<String> neededTechnologies;
-    private String[] technologies = new String[]{"FRONTEND", "BACKEND", "DATABASE", "MOBILE", "WORDPRESS", "PRESTASHOP"};
-    private String loremIpsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
-    private String[] loremSeperated = loremIpsum.split(" ");
+    public ArrayList<String> neededTechnologies = new ArrayList<>();
+    final private String[] technologies = new String[]{"FRONTEND", "BACKEND", "DATABASE", "MOBILE", "WORDPRESS", "PRESTASHOP"};
+    final private String loremIpsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+    final private String[] loremSeperated = loremIpsum.split(" ");
     public String projectName = "";
     public Object[] clientDetails;
     public Calendar deadline;
     public Calendar paycheckDeadline;
     public int price;
     public int penalty;
-    public projectComplexity complexity;
+    public ProjectComplexity complexity;
 
     public Project(Calendar currentDate) {
         var random = new RandomGenerator();
@@ -27,17 +27,20 @@ public class Project {
 
         // Randomize project name
         this.projectName = this.loremSeperated[tech] + this.loremSeperated[tech % 6] + this.loremSeperated[(tech + 1) % 2];
+//        for (var techno : this.technologies) {
+//            System.out.println(techno);
+//        }
         for (int i = 0; i < complex*2; i++) {
             this.neededTechnologies.add(this.technologies[i]);
         }
 
         // Initialize complexity
         if (complex == 1)
-            this.complexity = projectComplexity.EASY;
+            this.complexity = ProjectComplexity.EASY;
         else if (complex == 2)
-            this.complexity = projectComplexity.NORMAL;
+            this.complexity = ProjectComplexity.NORMAL;
         else
-            this.complexity = projectComplexity.HARD;
+            this.complexity = ProjectComplexity.HARD;
 
         // Get client details
         this.clientDetails = clientDetails.getClientDetails();

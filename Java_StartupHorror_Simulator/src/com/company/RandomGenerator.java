@@ -1,4 +1,5 @@
 package com.company;
+import com.company.workers.Student;
 import com.company.workers.Subcontractor;
 
 public class RandomGenerator {
@@ -22,9 +23,10 @@ public class RandomGenerator {
         return sb.toString();
     }
 
-    public Subcontractor getRandomSubcontractor(int random) {
+    public Subcontractor getRandomSubcontractor() {
+        var random = this.getRandomValue(0,99);
         var name = this.names[random % 10];
-        var specialization = this.names[random % 3];
+        var specialization = this.specializations[random % 3];
         var dailyCosts = 0;
         if (random < 10)
             dailyCosts = random*5 + 100;
@@ -35,10 +37,34 @@ public class RandomGenerator {
 
         if (specialization.equals("Programmer"))
             dailyCosts += 50;
-        else if (specialization.equals("Tester"))
+        else if (specialization.equals("Seller"))
             dailyCosts -= 50;
 
-        return new Subcontractor(name, false, dailyCosts, specialization);
+        return new Subcontractor(name, dailyCosts, specialization);
+    }
+
+    public Student getStudent(String whichStudent) {
+        var random = this.getRandomValue(0,99);
+        var name = "Student." + this.names[random % 10];
+        var specialization = this.specializations[0];
+        var chancesToFail = 0;
+        var chancesToDelay = 0;
+        var dailyCosts = 0;
+
+        if (whichStudent.equals("bad")) {
+            dailyCosts = 20;
+            chancesToFail = 20;
+            chancesToDelay = 20;
+        } else if (whichStudent.equals("avg")) {
+            dailyCosts = 30;
+            chancesToFail = 10;
+        } else {
+            dailyCosts = 40;
+
+        }
+
+
+        return new Student(name, dailyCosts, specialization, chancesToFail, chancesToDelay);
     }
 
 }

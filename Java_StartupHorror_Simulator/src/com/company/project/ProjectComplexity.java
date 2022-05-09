@@ -1,6 +1,6 @@
 package com.company.project;
 
-enum projectComplexity {
+public enum ProjectComplexity {
     EASY,
     NORMAL,
     HARD
