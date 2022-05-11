@@ -3,6 +3,7 @@ import com.company.RandomGenerator;
 import com.company.client.ClientDetails;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Map;
 
 public class Project {
 
@@ -12,12 +13,14 @@ public class Project {
     final private String loremIpsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
     final private String[] loremSeperated = loremIpsum.split(" ");
     public String projectName = "";
-    public Object[] clientDetails;
+    public ClientDetails clientDetails;
     public Calendar deadline;
     public Calendar paycheckDeadline;
     public int price;
     public int penalty;
-    public ProjectComplexity complexity;
+    public Map.Entry<ProjectComplexity, Integer> complexity;
+    public int chancesToBugs = 0;
+
 
     public Project(Calendar currentDate) {
         var random = new RandomGenerator();
@@ -36,14 +39,16 @@ public class Project {
 
         // Initialize complexity
         if (complex == 1)
-            this.complexity = ProjectComplexity.EASY;
+            this.complexity = Map.entry(ProjectComplexity.EASY, 5 + tech);
         else if (complex == 2)
-            this.complexity = ProjectComplexity.NORMAL;
-        else
-            this.complexity = ProjectComplexity.HARD;
+            this.complexity = Map.entry(ProjectComplexity.NORMAL, 10 + tech);
 
-        // Get client details
-        this.clientDetails = clientDetails.getClientDetails();
+        else
+            this.complexity = Map.entry(ProjectComplexity.HARD, 15 + tech);
+
+
+        // Set client details
+        this.clientDetails = clientDetails.setClientDetails();
 
         // Initialize dates
         this.currentDate = currentDate;

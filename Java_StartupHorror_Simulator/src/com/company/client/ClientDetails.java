@@ -8,29 +8,61 @@ public class ClientDetails implements IClientDetails {
 
     private final String[] names = { "Januszex Firma", "Microsoft", "Soczex",  "Klozetownia",  "WSB",  "TOP",  "Komputronik",  "Roleski",  "Pekao",  "TojletPapier" };
     private final String[] addresses = { "Gdańsk, Olinki 3", "Gdynia, Robótki 29", "Sopot, Przeróbki 92",  "Warszawa, Powstańców Wielkopolskich 123",  "Szczecin, Aleja Grundaldzka 300",  "Nowy Jork, Aleja Grundaldzka 300",  "Moskwa, Bursztynowa 50",  "Radom, Olinki 3",  "Hel, Bursztynowa 1",  "Gdańsk, Nowy Swiat 34" };
-    String name = "";
-    String address = "";
-    String phoneNumber = "";
-    Date insolvencyRisk = new Date();
+    String name;
+    String address;
+    String phoneNumber;
+    int delayedPaymentOneWeekRisk;
+    int delayedPaymentOneMonthRisk;
+    int neverPayRisk;
+    int penaltyAvoidChances;
+    int loseContactChances;
+    ClientType clientType;
 
-    IClientType clientType = new IClientType() {};
-
-    public Object[] getClientDetails() {
+    public ClientDetails setClientDetails() {
         var randomGenerator = new RandomGenerator();
         var randomNumber1 = randomGenerator.getRandomValue(0, 9);
         var randomNumber2 = randomGenerator.getRandomValue(0, 4);
+        var randomNumberClientType = randomGenerator.getRandomValue(1, 3);
 
         this.name = this.names[randomNumber1];
         this.address = this.addresses[randomNumber2];
         this.phoneNumber = randomGenerator.getPhoneNumber(randomNumber1, randomNumber2);
-        this.insolvencyRisk = getDate(randomNumber1, randomNumber2);
 
-        Object[] array = new Object[10];
-        array[0] = this.name;
-        array[1] = this.address;
-        array[2] = this.phoneNumber;
-        array[3] = this.insolvencyRisk;
-        return array;
+        switch(randomNumberClientType) {
+            // Good client
+            case 1: {
+                this.clientType = ClientType.GOOD;
+                this.delayedPaymentOneWeekRisk = 30;
+                this.delayedPaymentOneMonthRisk = 0;
+                this.neverPayRisk = 0;
+                this.penaltyAvoidChances = 20;
+                this.loseContactChances = 0;
+                break;
+            }
+            // Avg client
+            case 2: {
+                this.clientType = ClientType.AVERAGE;
+                this.delayedPaymentOneWeekRisk = 0;
+                this.delayedPaymentOneMonthRisk = 0;
+                this.neverPayRisk = 0;
+                this.penaltyAvoidChances = 0;
+                this.loseContactChances = 50;
+
+                break;
+            }
+            //Worst client
+            case 3: {
+                this.clientType = ClientType.SQUIRWIEL;
+                this.delayedPaymentOneWeekRisk = 0;
+                this.delayedPaymentOneMonthRisk = 5;
+                this.neverPayRisk = 1;
+                this.penaltyAvoidChances = 0;
+                this.loseContactChances = 100;
+                break;
+            }
+        }
+
+        return this;
     }
 
     public boolean checkLeapYear(int year) {
@@ -52,5 +84,41 @@ public class ClientDetails implements IClientDetails {
             day -= 1;
 
         return new GregorianCalendar(year, month - 1, day).getTime();
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public int getDelayedPaymentOneWeekRisk() {
+        return delayedPaymentOneWeekRisk;
+    }
+
+    public int getDelayedPaymentOneMonthRisk() {
+        return delayedPaymentOneMonthRisk;
+    }
+
+    public int getNeverPayRisk() {
+        return neverPayRisk;
+    }
+
+    public int getPenaltyAvoidChances() {
+        return penaltyAvoidChances;
+    }
+
+    public int getLoseContactChances() {
+        return loseContactChances;
+    }
+
+    public ClientType getClientType() {
+        return clientType;
     }
 }

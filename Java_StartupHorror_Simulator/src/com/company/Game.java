@@ -1,5 +1,6 @@
 package com.company;
 import com.company.client.ClientDetails;
+import com.company.client.ClientType;
 import com.company.project.Project;
 import com.company.project.ProjectComplexity;
 import com.company.workers.Student;
@@ -16,13 +17,16 @@ public class Game {
     private Project currentProject;
     private Double moneys;
     private Double startMoneys;
-    private Double costOfWorkers;
-    private Double dailyCosts;
+    private Double costOfWorkers = 0d;
+    private Double dailyCosts = 0d;
     public int bigProjectsQuantityWithoutOwner = 0;
     private int taxesDaysMade = 0;
     private int daysToNewAvailableProject = 0;
     private int projectSelected = 0;
     private int daysToFindNewClient = 0;
+    private int daysToFinishCurrentProject;
+    private int paymentDelayDaysLeft;
+    private int paymentDelayAmount;
     private boolean isFixNeeded = false;
 
     public void playGame() {
@@ -38,7 +42,7 @@ public class Game {
         var wholeGame = game.startGame();
 
         // Start game with 5-15 projects, selected by user
-        this.startGameWithProjects(startDate);
+        this.startGameAddProjects(startDate);
 
         this.taxesDaysMade = 0;
         this.moneys = Double.valueOf(randomNumber1 * 100);
@@ -68,12 +72,7 @@ public class Game {
             System.out.println("\nToday is day no." + dayNumber + "    Date: " + startDate.getTime());
 
             // Check if taxes were done & take 10% of your moneys if new month
-            if (!checkForNextMonth(startDate, tempCurrentDate)) {
-                System.out.println("You lost (your money, your wife and your house).");
-                break;
-            }
-
-            if (moneys <= 0) {
+            if (!checkForNextMonth(startDate, tempCurrentDate) || moneys <= 0) {
                 System.out.println("You lost (your money, your wife and your house).");
                 break;
             }
@@ -98,14 +97,13 @@ public class Game {
             if (todayOption == 1) {
                 this.assignProject(this.projectSelected);
 
-
                 // searching for new client day
             } else if (todayOption == 2) {
                 this.findNewClient();
 
                 // programming day
             } else if (todayOption == 3) {
-                System.out.println("YOU WONNNN!");
+                this.currentProject.complexity.getValue();
 
 
                 // testing day
@@ -114,7 +112,7 @@ public class Game {
 
                 // hand the project over day
             } else if (todayOption == 5) {
-                System.out.println("YOU WONNNN!");
+                this.handProjectOver();
 
                 // new employee day
             } else if (todayOption == 6) {
@@ -137,10 +135,7 @@ public class Game {
 
                 // taxes day
             } else if (todayOption == 10) {
-                if (this.taxesDaysMade > 2) {
-                    System.out.println("You did all the taxes. So today you're doing nothing.");
-                } else
-                    this.taxesDaysMade++;
+                this.taxesDaysMade++;
             }
 
             if (workOnlyAlone) {
@@ -158,13 +153,18 @@ public class Game {
             if (dayNumber == 5)
                 allConditions = true;
 
-            for (var subcontractor : subcontractors) {
-                if (subcontractor.isHired)
-                    this.costOfWorkers += subcontractor.dailyCosts;
+            if (this.subcontractors != null) {
+                for (var subcontractor : this.subcontractors) {
+                    if (subcontractor.isHired)
+                        this.costOfWorkers += subcontractor.dailyCosts;
+                }
             }
-            this.moneys -= costOfWorkers;
 
-            this.hiredWorkers.stream().forEach(t -> this.dailyCosts += t.dailyCosts);
+            this.moneys -= this.costOfWorkers;
+
+            if (this.hiredWorkers != null) {
+                this.hiredWorkers.stream().forEach(t -> this.dailyCosts += t.dailyCosts);
+            }
             startDate = addDay(startDate);
             dayNumber++;
             tempCurrentDate = startDate;
@@ -206,7 +206,7 @@ public class Game {
 
     public Game startGame() {
         var clientDetails = new ClientDetails();
-        clientDetails.getClientDetails();
+        clientDetails.setClientDetails();
         this.subcontractors = this.setSubcontractors();
         this.students = this.setStudents();
         return new Game(this.subcontractors, this.students, clientDetails);
@@ -297,6 +297,7 @@ public class Game {
     }
 
     public boolean isOwnerWorkingToday() {
+        System.out.println("Do you want to work today? (0/1)");
         var scanner = new Scanner(System.in);
         var userInput = scanner.nextLine();
         var userChoice = Integer.parseInt(userInput);
@@ -319,12 +320,16 @@ public class Game {
     }
 
     public int readPlayerOption() {
-        System.out.println("Select option for the next day (1-10): ");
+        System.out.println("Select option for the next day (1-10): (1-contract/2-client/3-program/4-test/5-handOver/6-employee/7-fire/8-student/9-fire/10-tax");
         var scanner = new Scanner(System.in);
         var userInput = scanner.nextLine();
         var userChoice = Integer.parseInt(userInput);
         switch(userChoice) {
             case 1: {
+                if (this.currentProject != null) {
+                    System.out.println("First you must finish current project.");
+                    this.readPlayerOption();
+                }
                 System.out.println("Which contract do you want to get? (number)");
                 userInput = scanner.nextLine();
                 userChoice = Integer.parseInt(userInput);
@@ -344,45 +349,86 @@ public class Game {
                 return 2;
             }
             case 3: {
+                if (currentProject == null) {
+                    System.out.println("Currently you don't have any projects to do!");
+                    this.readPlayerOption();
+                }
+                if (this.daysToFinishCurrentProject == 0) {
+                    System.out.println("Your program is ready to last test or hand over!");
+                    this.readPlayerOption();
+                }
                 System.out.println("You're programmer today!");
                 return 3;
             }
             case 4: {
+                if (this.currentProject == null) {
+                    System.out.println("Currently you don't have any projects to test!");
+                    this.readPlayerOption();
+                }
+                if (this.currentProject.chancesToBugs == 0) {
+                    System.out.println("Your program doesn't have any bugs for sure!");
+                    this.readPlayerOption();
+                }
                 System.out.println("You're tester today!");
                 return 4;
             }
             case 5: {
+                if (this.currentProject == null) {
+                    System.out.println("Currently you don't have any projects to hand over!");
+                    this.readPlayerOption();
+                }
                 System.out.println("You're handing over the project!");
                 return 5;
             }
             case 6: {
+                if (this.subcontractors == null) {
+                    System.out.println("There are no new employees to hire!");
+                    this.readPlayerOption();
+                }
                 System.out.println("You've got new employee!");
                 return 6;
             }
             case 7: {
+                if (this.hiredWorkers == null) {
+                    System.out.println("You don't have any employees");
+                    this.readPlayerOption();
+                }
                 System.out.println("You fired old employee!");
                 return 7;
             }
             case 8: {
+                if (this.hiredStudents == null) {
+                    System.out.println("There are no new students to hire!");
+                    this.readPlayerOption();
+                }
                 System.out.println("You've got new student!");
                 return 8;
             }
             case 9: {
+                if (this.hiredWorkers == null) {
+                    System.out.println("You don't have any students");
+                    this.readPlayerOption();
+                }
                 System.out.println("You've fired student!");
                 return 9;
             }
             case 10: {
+                if (this.taxesDaysMade > 2) {
+                    System.out.println("You did all the taxes!");
+                    this.readPlayerOption();
+                }
                 System.out.println("You're spending this day only on taxes (ZUS).");
                 return 10;
             }
             default: {
                 System.out.println("You're choose nothing. Choose again.");
+                this.readPlayerOption();
                 return 0;
             }
         }
     }
 
-    public void startGameWithProjects(Calendar startDate) {
+    public void startGameAddProjects(Calendar startDate) {
         var scanner = new Scanner(System.in);
         var startProjectsQuantity = 0;
 
@@ -447,11 +493,14 @@ public class Game {
         var projectAssigned = false;
         var selectedProject = this.availableProjects.get(projectNumber);
 
-        if (selectedProject.complexity != ProjectComplexity.HARD) {
+        if (selectedProject.complexity.getKey() != ProjectComplexity.HARD) {
             projectAssigned = true;
+            this.daysToFinishCurrentProject = selectedProject.complexity.getValue();
         } else {
-            if (this.hiredWorkers.stream().map(w -> w.specialization).anyMatch(w -> w == "Programmer"))
-                projectAssigned = true;
+            if (this.hiredWorkers != null) {
+                if (this.hiredWorkers.stream().map(w -> w.specialization).anyMatch(w -> w == "Programmer"))
+                    projectAssigned = true;
+            }
         }
 
         return projectAssigned;
@@ -466,6 +515,89 @@ public class Game {
 
         }
         this.daysToFindNewClient++;
+    }
 
+    public void handProjectOver() {
+        var randomGenerator = new RandomGenerator();
+        var random = randomGenerator.getRandomValue(1, 100);        // chances generator
+
+        var currentClient = this.currentProject.clientDetails;
+        System.out.print("Your client type was: " + currentClient.getClientType());
+        if (this.currentProject.chancesToBugs == 0) {
+            System.out.print("Congratulations, your project is perfect, client is satisfied");
+
+            if (currentClient.getClientType() == ClientType.GOOD) {
+                if (random <= 30) {
+                    this.paymentDelayDaysLeft = 7;
+                    this.paymentDelayAmount = this.currentProject.price;
+                } else {
+                    this.moneys += this.currentProject.price;
+                }
+            } else if (currentClient.getClientType() == ClientType.AVERAGE) {
+                this.moneys += this.currentProject.price;
+            }
+            else {
+                if (random <= 5) {
+                    this.paymentDelayDaysLeft = 30;
+                    this.paymentDelayAmount = this.currentProject.price;
+                } else if (random <= 30) {
+                    this.paymentDelayDaysLeft = 7;
+                    this.paymentDelayAmount = this.currentProject.price;
+                } else {
+                    this.moneys += this.currentProject.price;
+                }
+            }
+
+        } else {
+            if (currentClient.getClientType() == ClientType.GOOD) {
+                System.out.print("Your project has bugs, but client is satisfied");
+                if (random <= 30) {
+                    this.paymentDelayDaysLeft = 7;
+                    this.paymentDelayAmount = this.currentProject.price;
+                } else {
+                    this.moneys += this.currentProject.price;
+                }
+            } else if (currentClient.getClientType() == ClientType.AVERAGE) {
+                System.out.print("Your project has bugs, but client is satisfied");
+                this.moneys += this.currentProject.price;
+                this.moneys -= this.currentProject.penalty;
+                if (random <= 50) {
+                    this.loseContact();
+                }
+
+            }
+            else {
+                System.out.print("It will be a war.");
+                this.moneys -= currentProject.penalty;
+
+                if (random > 1) {
+                    if (random <= 5) {
+                        this.paymentDelayDaysLeft = 30;
+                        this.paymentDelayAmount = this.currentProject.price;
+                    } else if (random <= 30) {
+                        this.paymentDelayDaysLeft = 7;
+                        this.paymentDelayAmount = this.currentProject.price;
+                    } else {
+                        this.moneys += this.currentProject.price;
+                    }
+                }
+
+                this.loseContact();
+            }
+
+        }
+    }
+
+    public void programDay() {
+        this.currentProject.chancesToBugs += 0.05;
+        this.daysToFinishCurrentProject -= 1;
+    }
+
+    public void testDay() {
+        this.currentProject.chancesToBugs -= 0.2;
+    }
+
+    public void loseContact() {
+        this.availableProjects.remove(this.availableProjects.stream().filter(p -> p.clientDetails == this.clientDetails));
     }
 }
