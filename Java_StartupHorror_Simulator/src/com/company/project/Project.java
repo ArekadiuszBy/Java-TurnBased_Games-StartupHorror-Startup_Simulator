@@ -23,6 +23,7 @@ public class Project {
 
 
     public Project(Calendar currentDate) {
+        var tempDate = currentDate;
         var random = new RandomGenerator();
         var clientDetails = new ClientDetails();
         var tech = random.getRandomValue(0,5);
@@ -52,9 +53,9 @@ public class Project {
 
         // Initialize dates
         this.currentDate = currentDate;
-        this.currentDate.add(Calendar.DAY_OF_MONTH, (tech + 1) * complex^2 + 5);
-        this.deadline = this.currentDate;
-        this.currentDate.add(Calendar.DAY_OF_MONTH, 14);
+        tempDate.add(Calendar.DAY_OF_MONTH, (tech + 1) * complex^2 + 5);
+        this.deadline = tempDate;
+        tempDate.add(Calendar.DAY_OF_MONTH, 14);
         this.paycheckDeadline = this.currentDate;
 
         // Set prices
