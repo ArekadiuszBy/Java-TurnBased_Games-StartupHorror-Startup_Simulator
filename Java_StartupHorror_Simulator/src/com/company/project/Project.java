@@ -20,6 +20,7 @@ public class Project {
     public int penalty;
     public Map.Entry<ProjectComplexity, Integer> complexity;
     public int chancesToBugs = 0;
+    public int chancesToDelay = 0;
 
 
     public Project(Calendar currentDate) {
