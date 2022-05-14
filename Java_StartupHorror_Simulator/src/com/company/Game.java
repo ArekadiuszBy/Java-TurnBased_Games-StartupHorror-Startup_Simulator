@@ -6,13 +6,14 @@ import com.company.project.ProjectComplexity;
 import com.company.workers.Student;
 import com.company.workers.Subcontractor;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Game {
-    public ArrayList<Subcontractor> workersToHire;
-    public ArrayList<Subcontractor> hiredWorkers = new ArrayList<>();
-    public ArrayList<Student> students;
-    public ArrayList<Student> hiredStudents;
-    public ClientDetails clientDetails;
+    private ArrayList<Subcontractor> workersToHire;
+    private ArrayList<Subcontractor> hiredWorkers = new ArrayList<>();
+    private ArrayList<Student> students;
+    private ArrayList<Student> hiredStudents;
+    private ClientDetails clientDetails;
     private ArrayList<Project> availableProjects;
     private Project currentProject;
     private Double moneys = 0d;
@@ -20,8 +21,8 @@ public class Game {
     private Double dailyCostsOfWorkers = 0d;
     private Double dailyCosts = 0d;
 
-    public int bigProjectsQuantityWithoutOwner = 0;
-    public int projectFoundedBySeller = 0;
+    private int bigProjectsQuantityWithoutOwner = 0;
+    private int projectFoundedBySeller = 0;
     private boolean wasOwnerADevInBigProject = false;
 
     private int taxesDaysMade = 0;
@@ -94,10 +95,8 @@ public class Game {
             // Count student
             if (!workOnlyAlone && this.currentProjectByStudent != null) {
                 this.moneys -= this.dailyCostsOfWorkers;
-                this.calculateProjectProgressByEmployees();
+                this.calculateProjectProgressByStudent();
             }
-
-            this.calculateProjectProgressByStudent();
 
             if (this.checkCondition(this.bigProjectsQuantityWithoutOwner, this.projectFoundedBySeller, this.moneys)) {
                 System.out.println("YOU WON!");
@@ -106,7 +105,7 @@ public class Game {
                 System.out.println("Projects in your organization: " + projectsQuantity);
             }
 
-            this.currentDate = addDay(this.currentDate);
+            addDay(this.currentDate);
             dayNumber++;
             tempCurrentDate = this.currentDate;
         }
@@ -138,7 +137,7 @@ public class Game {
             return false;
         }
         if (oldDate.get(Calendar.MONTH) != tempCurrentMonth.get(Calendar.MONTH)) {
-            this.moneys *= 0.9;
+            this.moneys = (this.moneys - this.startMoneys) * 0.9;
             if (this.taxesDaysMade < 2) {
                 System.out.println("YOU FORGOT TO DO TAXES! Tax clerks are coming, better run away 4ever!");
                 return false;
@@ -524,13 +523,14 @@ public class Game {
             } catch(Exception e) {
                 System.out.println("Wrong number!" + e);
                 System.out.println("Type number from 5 to 15 again.");
-                this.startGameAddProjects(startDate);
+                continue;
             }
             if (startProjectsQuantity >= 5 && startProjectsQuantity <= 15) {
                 this.availableProjects = this.initializeProjects(startDate, startProjectsQuantity);
+                break;
             } else {
                 System.out.println("Wrong number! Type number from 5 to 15 again");
-                this.startGameAddProjects(startDate);
+                continue;
             }
         }
     }
@@ -547,58 +547,108 @@ public class Game {
     }
 
     public void hireEmployee() {
-        var scanner = new Scanner(System.in);
-        System.out.print("Input name of the employee you want to hire: ");
-        var hiredEmployeeName = scanner.nextLine();
-        if (hiredEmployeeName.length() < 3) {
-            System.out.println("Don't try me, please input his/her real name: ");
-            this.hireEmployee();
+        while (true) {
+            var scanner = new Scanner(System.in);
+            System.out.print("Input name of the employee you want to hire: ");
+            var hiredEmployeeName = scanner.nextLine();
+
+            if (hiredEmployeeName.length() < 3) {
+                System.out.println("Don't try me, please input his/her real name: ");
+                continue;
+            }
+            if (this.workersToHire.stream().filter(s -> s.name.equals(hiredEmployeeName)).count() == 0) {
+                System.out.println("Person doesn't exists. Type name again.");
+            }
+
+            var worker = new ArrayList<Subcontractor>();
+            this.workersToHire.forEach(w -> {
+                if (w.name.equals(hiredEmployeeName)) {
+                    worker.add(w);
+                }
+            });
+
+            if (worker.size() == 0) {
+                System.out.println("Something went wrong. Type name again.");
+                continue;
+            }
+
+            var selectedWorker = worker.get(0);
+            if (worker.size() > 1) {
+                System.out.println("There are " + worker.size() + " people with the same name. Enter which one do you want to hire (1 / 2 / 3 etc.)");
+                var indexString = scanner.nextLine();
+                try {
+                    var employeeIndex = Integer.parseInt(indexString);
+                    selectedWorker = worker.get(employeeIndex - 1);
+                } catch(Exception e) {
+                    System.out.println("Wrong number!" + e);
+                    System.out.println("Type number again.");
+                }
+            }
+
+            this.hiredWorkers.add(selectedWorker);
+
+//        this.hiredWorkers.add(this.workersToHire.stream().filter(s -> s.name.equals(hiredEmployeeName)).findFirst().get());
+            AtomicInteger indexOfWorkersToHire = new AtomicInteger();
+            AtomicInteger i = new AtomicInteger();
+            Subcontractor finalSelectedWorker = selectedWorker;
+            this.workersToHire.forEach(w -> {
+                if (!w.equals(finalSelectedWorker))
+                    i.getAndIncrement();
+                else
+                    indexOfWorkersToHire.set(i.get());
+            });
+            this.workersToHire.remove(indexOfWorkersToHire.get());
+            this.moneys -= 500;
+            this.dailyCostsOfWorkers += selectedWorker.dailyCosts;
+            break;
         }
-        if (this.workersToHire.stream().filter(s -> s.name.equals(hiredEmployeeName)).count() < 0) {
-            System.out.println("Person doesn't exists. Type name again.");
-        }
-        this.hiredWorkers.add(this.workersToHire.stream().filter(s -> s.name.equals(hiredEmployeeName)).findFirst().get());
-        this.workersToHire.remove(hiredWorkers.size());
-        this.moneys -= 500;
-        this.dailyCostsOfWorkers += this.workersToHire.stream().filter(s -> s.name.equals(hiredEmployeeName)).findFirst().get().dailyCosts;
     }
 
     public void fireEmployee() {
-        System.out.println("Enter employee name to fire: ");
-        var scanner = new Scanner(System.in);
-        var firedEmployeeName = scanner.nextLine();
-        if (firedEmployeeName.length() < 3) {
-            System.out.println("Don't try me, please input his/her real name: ");
-            this.fireEmployee();
+        while (true) {
+            System.out.println("Enter employee name to fire: ");
+            var scanner = new Scanner(System.in);
+            var firedEmployeeName = scanner.nextLine();
+            if (firedEmployeeName.length() < 3) {
+                System.out.println("Don't try me, please input his/her real name: ");
+                continue;
+            }
+            this.hiredWorkers.remove(this.workersToHire.stream().filter(s -> s.name.equals(firedEmployeeName)).findFirst().get());
+            this.moneys -= 200;
+            break;
         }
-        this.hiredWorkers.remove(this.workersToHire.stream().filter(s -> s.name.equals(firedEmployeeName)).findFirst().get());
-        this.moneys -= 200;
     }
 
     public void hireStudent() {
-        var scanner = new Scanner(System.in);
-        System.out.println("Hire student to do this project. (skill - good/avg/bad)");
-        var hiredStudentSkill = scanner.nextLine();
-        String finalHiredStudentSkill = hiredStudentSkill.toUpperCase(Locale.ROOT);
-        if (this.students.stream().filter(s -> s.studentSkill.equals(finalHiredStudentSkill)).count() < 0) {
-            System.out.println("Student doesn't exists. Type his skill again.");
-            this.hireStudent();
+        while (true) {
+            var scanner = new Scanner(System.in);
+            System.out.println("Hire student to do this project. (skill - good/avg/bad)");
+            var hiredStudentSkill = scanner.nextLine();
+            String finalHiredStudentSkill = hiredStudentSkill.toUpperCase(Locale.ROOT);
+            if (this.students.stream().filter(s -> s.studentSkill.equals(finalHiredStudentSkill)).count() < 0) {
+                System.out.println("Student doesn't exists. Type his skill again.");
+                continue;
+            }
+            this.hiredStudents.add(this.students.stream().filter(s -> s.studentSkill.equals(finalHiredStudentSkill)).findFirst().get());
+            this.moneys -= 200;
+            break;
         }
-        this.hiredStudents.add(this.students.stream().filter(s -> s.studentSkill.equals(finalHiredStudentSkill)).findFirst().get());
-        this.moneys -= 200;
     }
 
     public void fireStudent() {
-        System.out.println("Enter student skill to fire: (good/avg/bad) ");
-        var scanner = new Scanner(System.in);
-        var firedStudentSkill = scanner.nextLine();
-        String finalHiredStudentSkill = firedStudentSkill.toUpperCase(Locale.ROOT);
-        if (finalHiredStudentSkill.length() < 3) {
-            System.out.println("Don't try me, please input his/her real name: ");
-            this.fireEmployee();
+        while (true) {
+            System.out.println("Enter student skill to fire: (good/avg/bad) ");
+            var scanner = new Scanner(System.in);
+            var firedStudentSkill = scanner.nextLine();
+            String finalHiredStudentSkill = firedStudentSkill.toUpperCase(Locale.ROOT);
+            if (finalHiredStudentSkill.length() < 3) {
+                System.out.println("Don't try me, please input again his skill: ");
+                continue;
+            }
+            this.hiredStudents.remove(this.students.stream().filter(s -> s.studentSkill.equals(finalHiredStudentSkill)).findFirst().get());
+            this.moneys -= 100;
+            break;
         }
-        this.hiredStudents.remove(this.students.stream().filter(s -> s.studentSkill.equals(finalHiredStudentSkill)).findFirst().get());
-        this.moneys -= 100;
     }
 
     public void assignProjectForYourself(int projectNumber) {
