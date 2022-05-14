@@ -4,12 +4,12 @@ public class Student {
     public String name;
     public double dailyCosts;
     public String specialization;
-    public boolean isHired;
-    public int chancesToFail;
-    public int chancesToDelay;
+    public boolean isHired = false;
+    public double chancesToFail = 0;
+    public double chancesToDelay = 0;
     public StudentSkill studentSkill;
 
-    public Student(String name, double dailyCosts, String specialization, int chancesToFail, int chancesToDelay) {
+    public Student(String name, double dailyCosts, String specialization, double chancesToFail, double chancesToDelay) {
         this.name = name;
         this.dailyCosts = dailyCosts;
         this.specialization = specialization;

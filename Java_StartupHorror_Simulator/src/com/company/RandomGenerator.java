@@ -47,20 +47,19 @@ public class RandomGenerator {
         var random = this.getRandomValue(0,99);
         var name = "Student." + this.names[random % 10];
         var specialization = this.specializations[0];
-        var chancesToFail = 0;
-        var chancesToDelay = 0;
-        var dailyCosts = 0;
+        var chancesToFail = 0d;
+        var chancesToDelay = 0d;
+        var dailyCosts = 0d;
 
         if (whichStudent.equals("bad")) {
             dailyCosts = 20;
-            chancesToFail = 20;
-            chancesToDelay = 20;
+            chancesToFail = 0.20d;
+            chancesToDelay = 0.20d;
         } else if (whichStudent.equals("avg")) {
             dailyCosts = 30;
-            chancesToFail = 10;
+            chancesToFail = 0.10d;
         } else {
             dailyCosts = 40;
-
         }
 
 
