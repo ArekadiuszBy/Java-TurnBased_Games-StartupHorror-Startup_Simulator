@@ -34,8 +34,8 @@ public class Game {
     private int paymentDelayAmount = 0;
     private Calendar currentDate = new GregorianCalendar();
 
-    private Project currentProjectDetailsByStudent;
-    private Student currentProjectStudentDetailsByStudent;
+    private Project currentProjectByStudent;
+    private Student currentProjectByStudentStudentDetails;
     private double daysToFinishCurrentProjectByStudent = 0d;
 
     public void playGame() {
@@ -58,6 +58,13 @@ public class Game {
         while (!allConditions) {
             System.out.println("\n\nToday is day no." + dayNumber + "    Date: " + this.currentDate.getTime());
 
+            if (this.paymentDelayDaysLeft > 0) {
+                this.paymentDelayDaysLeft--;
+            } else if (this.paymentDelayAmount > 0) {
+                this.moneys += this.paymentDelayAmount;
+                this.paymentDelayAmount = 0;
+            }
+
             // Check if taxes were done & take 10% of your moneys if new month
             if (!checkForNextMonth(this.currentDate, tempCurrentDate)) {
                 System.out.println("You lost (your money, your wife and your house).");
@@ -67,7 +74,7 @@ public class Game {
             isOwnerWorking = this.isOwnerWorkingToday();
 
             // Check if weekend
-            workOnlyAlone = (this.currentDate.get(Calendar.DAY_OF_WEEK) == 7 || this.currentDate.get(Calendar.DAY_OF_WEEK) == 1);
+            workOnlyAlone = (this.currentDate.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY || this.currentDate.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY);
             if(!isOwnerWorking && this.hiredWorkers == null) {
                 this.currentDate = addDay(this.currentDate);
                 dayNumber++;
@@ -78,10 +85,19 @@ public class Game {
             // Main function of tour-based game
             this.readPlayerOption();
 
+            // Count workers
             if (!workOnlyAlone && this.currentProject != null) {
                 this.moneys -= this.dailyCostsOfWorkers;
                 this.calculateProjectProgressByEmployees();
             }
+
+            // Count student
+            if (!workOnlyAlone && this.currentProjectByStudent != null) {
+                this.moneys -= this.dailyCostsOfWorkers;
+                this.calculateProjectProgressByEmployees();
+            }
+
+            this.calculateProjectProgressByStudent();
 
             if (this.checkCondition(this.bigProjectsQuantityWithoutOwner, this.projectFoundedBySeller, this.moneys)) {
                 System.out.println("YOU WON!");
@@ -244,8 +260,12 @@ public class Game {
     }
 
     public boolean isOwnerWorkingToday() {
-        if (this.currentDate.get(Calendar.DAY_OF_WEEK) == 7 || this.currentDate.get(Calendar.DAY_OF_WEEK) == 0) {
-            System.out.println("It's weekend. Do you want to work today? (0/1)");
+        if (this.currentDate.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY || this.currentDate.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
+            if (this.currentDate.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)
+                System.out.println("It's weekend - Saturday. Do you want to work today? (0/1)");
+            else
+                System.out.println("It's weekend - Sunday. Do you want to work today? (0/1)");
+
             var scanner = new Scanner(System.in);
             var userInput = scanner.nextLine();
             var userChoice = Integer.parseInt(userInput);
@@ -277,7 +297,7 @@ public class Game {
     public void readPlayerOption() {
         var isRepeat = true;
         while (isRepeat) {
-            System.out.println("\nSelect option for the next day (1-10): (1-contract/2-client/3-program/4-test/5-handOver/6-employee/7-fire/8-student/9-fire/10-tax/11-showProject/12-showYour");
+            System.out.println("\nSelect option for the next day (1-10): ( 1-contract / 2-client / 3-program / 4-test / 5-handOver / 6-employee / 7-fire / 8-student / 9-fire / 10-tax / 11-showProject / 12-showCompany )");
             var scanner = new Scanner(System.in);
             var userInput = scanner.nextLine();
             var userChoice = 0;
@@ -295,11 +315,14 @@ public class Game {
                 continue;
             }
 
-            if (this.currentProject != null) {
-                if (this.daysToFinishCurrentProject == 0 && this.currentProject.chancesToBugs == 0) {
-                    System.out.println("Your program is ready to hand over! It's fully done & tested. You can firmly hand over a project.");
-                    continue;
-                }
+            if (this.currentProject != null && this.daysToFinishCurrentProject == 0 && this.currentProject.chancesToBugs == 0) {
+                System.out.println("Your program is ready to hand over! It's fully done & tested. You can firmly hand over a project.");
+                continue;
+            }
+
+            if (this.currentProjectByStudent != null && this.daysToFinishCurrentProjectByStudent == 0 && this.currentProject.chancesToBugs == 0) {
+                System.out.println("Student's program is ready to hand over! It's fully done & tested. You can firmly hand over a project.");
+                continue;
             }
 
             if (userChoice == 1) {
@@ -335,7 +358,7 @@ public class Game {
 
                 userOrStudentDo = userOrStudentDo.toLowerCase(Locale.ROOT);
                 if (userOrStudentDo.equals("student")) {
-                    if (this.currentProjectDetailsByStudent != null) {
+                    if (this.currentProjectByStudent != null) {
                         System.out.println("You can't assign the next project for a student in the same time!");
                         continue;
                     }
@@ -389,14 +412,14 @@ public class Game {
                 break;
             }
             if (userChoice == 5) {
-                if (this.currentProject == null && this.currentProjectDetailsByStudent == null) {
+                if (this.currentProject == null && this.currentProjectByStudent == null) {
                     System.out.println("Currently you don't have any projects to hand over! Choose activity for today again.");
                     continue;
                 }
 
                 var meOrStudent = "";
 
-                if (this.currentProject != null && this.currentProjectDetailsByStudent != null) {
+                if (this.currentProject != null && this.currentProjectByStudent != null) {
                     System.out.println("Do you want to hand your project or student's project over? (my/student)");
                     meOrStudent = scanner.nextLine();
                     meOrStudent = meOrStudent.toLowerCase(Locale.ROOT);
@@ -414,8 +437,8 @@ public class Game {
                     this.handProjectOver();
                     System.out.println("You're handing over the project!");
                     break;
-                } else if (this.currentProjectDetailsByStudent != null || meOrStudent.equals("my")) {
-                    if (this.currentProjectDetailsByStudent.chancesToBugs > 0) {
+                } else if (this.currentProjectByStudent != null || meOrStudent.equals("my")) {
+                    if (this.currentProjectByStudent.chancesToBugs > 0) {
                         System.out.println("This student's program has probably some bugs, are you sure you want to hand it over? (yes/no)");
                         var handProjectOver = scanner.nextLine();
                         handProjectOver = handProjectOver.toLowerCase(Locale.ROOT);
@@ -608,27 +631,27 @@ public class Game {
             var scanner = new Scanner(System.in);
             var studentSkills = scanner.nextLine();
             studentSkills = studentSkills.toUpperCase(Locale.ROOT);
-            this.currentProjectDetailsByStudent = selectedProject;
+            this.currentProjectByStudent = selectedProject;
             String finalStudentSkills = studentSkills;
             this.students.stream().forEach(t -> {
                 if (t.studentSkill.equals(finalStudentSkills)) {
-                    this.currentProjectStudentDetailsByStudent = t;
+                    this.currentProjectByStudentStudentDetails = t;
                 }
             });
 
             // TODO: Fix removing students by index
-            if (this.currentProjectStudentDetailsByStudent.studentSkill.equals("bad")){
+            if (this.currentProjectByStudentStudentDetails.studentSkill.equals("bad")){
                 this.students.remove(0);
-                this.currentProjectDetailsByStudent.chancesToBugs = 0.20;
-                this.currentProjectDetailsByStudent.chancesToDelay = 0.20;
-            } else if (this.currentProjectStudentDetailsByStudent.studentSkill.equals("avg")){
+                this.currentProjectByStudent.chancesToBugs = 0.20;
+                this.currentProjectByStudent.chancesToDelay = 0.20;
+            } else if (this.currentProjectByStudentStudentDetails.studentSkill.equals("avg")){
                 this.students.remove(1);
-                this.currentProjectDetailsByStudent.chancesToBugs = 0.10;
-                this.currentProjectDetailsByStudent.chancesToDelay = 0;
+                this.currentProjectByStudent.chancesToBugs = 0.10;
+                this.currentProjectByStudent.chancesToDelay = 0;
             } else {
                 this.students.remove(2);
-                this.currentProjectDetailsByStudent.chancesToBugs = 0;
-                this.currentProjectDetailsByStudent.chancesToDelay = 0;
+                this.currentProjectByStudent.chancesToBugs = 0;
+                this.currentProjectByStudent.chancesToDelay = 0;
             }
 
             this.daysToFinishCurrentProjectByStudent = selectedProject.complexity.getValue();
@@ -739,7 +762,7 @@ public class Game {
 
         var currentClient = this.currentProject.clientDetails;
         System.out.print("Your client type was: " + currentClient.getClientType());
-        if (this.currentProjectDetailsByStudent.chancesToBugs == 0) {
+        if (this.currentProjectByStudent.chancesToBugs == 0) {
             System.out.print(" Congratulations, student's project is perfect, client is satisfied :)");
 
             if (currentClient.getClientType().equals(ClientType.GOOD)) {
@@ -769,14 +792,14 @@ public class Game {
                 System.out.print(" Your project has bugs, but client is satisfied");
                 if (random <= 30) {
                     this.paymentDelayDaysLeft = 7;
-                    this.paymentDelayAmount = this.currentProjectDetailsByStudent.price;
+                    this.paymentDelayAmount = this.currentProjectByStudent.price;
                 } else {
-                    this.moneys += this.currentProjectDetailsByStudent.price;
+                    this.moneys += this.currentProjectByStudent.price;
                 }
             } else if (currentClient.getClientType().equals(ClientType.AVERAGE)) {
                 System.out.print(" Your project has bugs, but client is satisfied");
-                this.moneys += this.currentProjectDetailsByStudent.price;
-                this.moneys -= this.currentProjectDetailsByStudent.penalty;
+                this.moneys += this.currentProjectByStudent.price;
+                this.moneys -= this.currentProjectByStudent.penalty;
                 if (random <= 50) {
                     this.loseContact();
                 }
@@ -784,17 +807,17 @@ public class Game {
             }
             else {
                 System.out.print(" It will be a war.");
-                this.moneys -= currentProjectDetailsByStudent.penalty;
+                this.moneys -= currentProjectByStudent.penalty;
 
                 if (random > 1) {
                     if (random <= 5) {
                         this.paymentDelayDaysLeft = 30;
-                        this.paymentDelayAmount = this.currentProjectDetailsByStudent.price;
+                        this.paymentDelayAmount = this.currentProjectByStudent.price;
                     } else if (random <= 30) {
                         this.paymentDelayDaysLeft = 7;
-                        this.paymentDelayAmount = this.currentProjectDetailsByStudent.price;
+                        this.paymentDelayAmount = this.currentProjectByStudent.price;
                     } else {
-                        this.moneys += this.currentProjectDetailsByStudent.price;
+                        this.moneys += this.currentProjectByStudent.price;
                     }
                 }
 
@@ -802,8 +825,8 @@ public class Game {
             }
         }
 
-        this.currentProjectDetailsByStudent = null;
-        this.currentProjectStudentDetailsByStudent = null;
+        this.currentProjectByStudent = null;
+        this.currentProjectByStudentStudentDetails = null;
     }
 
     public void calculateProjectProgressByEmployees() {
@@ -819,13 +842,20 @@ public class Game {
 
     public void calculateProjectProgressByStudent() {
         this.daysToFinishCurrentProjectByStudent -= 0.5;
-        this.currentProjectDetailsByStudent.chancesToBugs -= 0.15;
+        this.currentProjectByStudent.chancesToBugs -= 0.15;
     }
 
     public void programDay() {
         this.wasOwnerADevInBigProject = false;
         this.currentProject.chancesToBugs += 0.05;
         this.daysToFinishCurrentProject -= 1;
+
+        // If it's "more" than the end, then programmers did testing
+        if (this.daysToFinishCurrentProject < 0) {
+            this.daysToFinishCurrentProject = 0;
+            var programmersQuantity = this.hiredWorkers.stream().map(w -> w.specialization.equals("Programmer")).count();
+            this.currentProject.chancesToBugs -= 0.1 * programmersQuantity;
+        }
     }
 
     public void testDay() {
@@ -843,8 +873,8 @@ public class Game {
         if (this.currentProject != null) {
             System.out.print(" Current project: " + this.currentProject.projectName + ", that will be ready for " + this.daysToFinishCurrentProject + 1 + " days.");
         }
-        if (this.currentProjectDetailsByStudent != null) {
-            System.out.print(" Current project make by student: " + this.currentProjectDetailsByStudent.projectName + ", that will be ready for " + this.daysToFinishCurrentProject + 1 + "days");
+        if (this.currentProjectByStudent != null) {
+            System.out.print(" Current project make by student: " + this.currentProjectByStudent.projectName + ", that will be ready for " + this.daysToFinishCurrentProject + 1 + "days");
         }
         System.out.print(" Taxes days made: " + this.taxesDaysMade);
         System.out.print(" Your daily costs are: " + this.dailyCosts);
